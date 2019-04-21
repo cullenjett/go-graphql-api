@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+  api:
+    build: .
+    environment:
+      POSTGRES_DB: go-graphql-api-dev
+      POSTGRES_USER: postgres-dev
+      POSTGRES_PASSWORD: CullenWuzHeer
+    ports:
+      - 3000:3000
+    links:
+      - db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:11
+    environment:
+      POSTGRES_DB: go-graphql-api-dev
+      POSTGRES_USER: postgres-dev
+      POSTGRES_PASSWORD: CullenWuzHeer
+    ports:
+      - 5432:5432
