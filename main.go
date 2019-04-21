@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/relay"
@@ -15,10 +16,17 @@ import (
 
 type query struct{}
 
-func (_ *query) Hello() string { return "Hello, world!" }
+func (_ *query) Hello() string {
+	return "Hello, world!"
+}
 
 func main() {
 	// db := connectToDB()
+
+	tpl := template.Must(template.ParseFiles("./graphql-playground.html"))
+	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tpl.Execute(w, nil)
+	}))
 
 	s := `
 		schema {
