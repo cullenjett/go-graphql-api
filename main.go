@@ -14,12 +14,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type query struct{}
-
-func (*query) Hello() string {
-	return "Hello, world!"
-}
-
 func main() {
 	// db := connectToDB()
 
@@ -63,10 +57,48 @@ func handleGraphQL() http.Handler {
 		schema {
 			query: Query
 		}
+
 		type Query {
-			hello: String!
+			plants: [Plant!]!
+		}
+
+		type Plant {
+			id: ID!
+			name: String!
 		}
 	`
 	schema := graphql.MustParseSchema(s, &query{})
 	return &relay.Handler{Schema: schema}
+}
+
+type query struct{}
+
+func (*query) Plants() []*plantResolver {
+	var l []*plantResolver
+	l = append(l, &plantResolver{&plant{
+		id:   "001",
+		name: "Fiddle Leaf Fig",
+	}})
+	l = append(l, &plantResolver{&plant{
+		id:   "002",
+		name: "Swiss Cheese Plant",
+	}})
+	return l
+}
+
+type plant struct {
+	id   graphql.ID
+	name string
+}
+
+type plantResolver struct {
+	p *plant
+}
+
+func (p *plantResolver) ID() graphql.ID {
+	return p.p.id
+}
+
+func (p *plantResolver) Name() string {
+	return p.p.name
 }
