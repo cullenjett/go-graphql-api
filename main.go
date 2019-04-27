@@ -16,28 +16,15 @@ import (
 
 type query struct{}
 
-func (_ *query) Hello() string {
+func (*query) Hello() string {
 	return "Hello, world!"
 }
 
 func main() {
 	// db := connectToDB()
 
-	tpl := template.Must(template.ParseFiles("./graphql-playground.html"))
-	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tpl.Execute(w, nil)
-	}))
-
-	s := `
-		schema {
-			query: Query
-		}
-		type Query {
-			hello: String!
-		}
-	`
-	schema := graphql.MustParseSchema(s, &query{})
-	http.Handle("/api", &relay.Handler{Schema: schema})
+	http.Handle("/", handleGraphQLPlayground())
+	http.Handle("/api", handleGraphQL())
 
 	fmt.Println("listening on port 3000")
 	http.ListenAndServe(":3000", nil)
@@ -62,4 +49,24 @@ func connectToDB() *sql.DB {
 	}
 
 	return db
+}
+
+func handleGraphQLPlayground() http.HandlerFunc {
+	tpl := template.Must(template.ParseFiles("./graphql-playground.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		tpl.Execute(w, nil)
+	}
+}
+
+func handleGraphQL() http.Handler {
+	s := `
+		schema {
+			query: Query
+		}
+		type Query {
+			hello: String!
+		}
+	`
+	schema := graphql.MustParseSchema(s, &query{})
+	return &relay.Handler{Schema: schema}
 }
