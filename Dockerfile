@@ -2,6 +2,8 @@ FROM golang:1.12
 
 WORKDIR /app
 
-COPY . .
+RUN go get github.com/cespare/reflex
 
-CMD ["go", "run", "main.go"]
+COPY reflex.conf /
+
+CMD ["reflex", "-c", "/reflex.conf"]

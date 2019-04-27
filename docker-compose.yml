@@ -3,6 +3,8 @@ version: '3.6'
 services:
   api:
     build: .
+    volumes:
+      - .:/app
     environment:
       POSTGRES_DB: go-graphql-api-dev
       POSTGRES_USER: postgres-dev
