@@ -64,7 +64,7 @@ func handleGraphQL() http.Handler {
 
 		type Plant {
 			id: ID!
-			name: String!
+			name: String
 		}
 	`
 	schema := graphql.MustParseSchema(s, &query{})
@@ -74,16 +74,24 @@ func handleGraphQL() http.Handler {
 type query struct{}
 
 func (*query) Plants() []*plantResolver {
-	var l []*plantResolver
-	l = append(l, &plantResolver{&plant{
-		id:   "001",
-		name: "Fiddle Leaf Fig",
-	}})
-	l = append(l, &plantResolver{&plant{
-		id:   "002",
-		name: "Swiss Cheese Plant",
-	}})
-	return l
+	return []*plantResolver{
+		&plantResolver{&plant{
+			id:   "001",
+			name: "Fiddle Leaf Fig",
+		}},
+		&plantResolver{&plant{
+			id:   "002",
+			name: "Swiss Cheese Plant",
+		}},
+		&plantResolver{&plant{
+			id:   "003",
+			name: "Macho Fern",
+		}},
+		&plantResolver{&plant{
+			id:   "004",
+			name: "ZZ Plant",
+		}},
+	}
 }
 
 type plant struct {
@@ -99,6 +107,10 @@ func (p *plantResolver) ID() graphql.ID {
 	return p.p.id
 }
 
-func (p *plantResolver) Name() string {
-	return p.p.name
+func (p *plantResolver) Name() *string {
+	name := p.p.name
+	if name == "" {
+		return nil
+	}
+	return &name
 }

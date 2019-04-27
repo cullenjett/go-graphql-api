@@ -7,4 +7,9 @@ This is a demo GraphQL API written in Go using the [`graphql-go`](https://github
 ## Commands
 
 - `make`
-  - Runs [`graphql-playground`](https://github.com/prisma/graphql-playground) on `http://localhost:3000` and the API on `/api`
+
+  - Run [`graphql-playground`](https://github.com/prisma/graphql-playground) on `http://localhost:3000` and the API on `/api`
+
+- `make stop`
+
+  - Clean up any running docker images that were mishandled by sending SIGINT (ctrl-c) to `make`
