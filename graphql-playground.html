@@ -15,7 +15,7 @@
       rel="shortcut icon"
       href="//cdn.jsdelivr.net/npm/graphql-playground-react/build/favicon.png"
     />
-    <script src="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js" defer></script>
   </head>
 
   <body>
@@ -63,8 +63,7 @@
     <script>
       window.addEventListener('load', function(event) {
         GraphQLPlayground.init(document.getElementById('root'), {
-          // options as 'endpoint' belong here
-          endpoint: 'http://localhost:3000/api'
+          endpoint: '{{.Endpoint}}'
         });
       });
     </script>

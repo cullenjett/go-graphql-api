@@ -14,6 +14,30 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type Plant struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+var plants = []Plant{
+	Plant{
+		ID:   "001",
+		Name: "Fiddle Leaf Fig",
+	},
+	Plant{
+		ID:   "002",
+		Name: "Swiss Cheese Plant",
+	},
+	Plant{
+		ID:   "003",
+		Name: "Macho Fern",
+	},
+	Plant{
+		ID:   "004",
+		Name: "ZZ Plant",
+	},
+}
+
 func main() {
 	// connectToDB()
 
@@ -50,9 +74,15 @@ func connectToDB() *sql.DB {
 }
 
 func handleGraphQLPlayground() http.HandlerFunc {
+	type playgroundData struct {
+		Endpoint string
+	}
+
 	tpl := template.Must(template.ParseFiles("./graphql-playground.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
-		tpl.Execute(w, nil)
+		tpl.Execute(w, playgroundData{
+			Endpoint: "http://localhost:3000/api",
+		})
 	}
 }
 
