@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"graphql-api/pkg/schema"
 	"log"
 	"net/http"
 	"os"
@@ -13,30 +14,6 @@ import (
 
 	_ "github.com/lib/pq"
 )
-
-type Plant struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-var plants = []Plant{
-	Plant{
-		ID:   "001",
-		Name: "Fiddle Leaf Fig",
-	},
-	Plant{
-		ID:   "002",
-		Name: "Swiss Cheese Plant",
-	},
-	Plant{
-		ID:   "003",
-		Name: "Macho Fern",
-	},
-	Plant{
-		ID:   "004",
-		Name: "ZZ Plant",
-	},
-}
 
 func main() {
 	// connectToDB()
@@ -57,10 +34,6 @@ func connectToDB() *sql.DB {
 		pw,
 		dbName,
 	)
-	fmt.Println(user)
-	fmt.Println(pw)
-	fmt.Println(dbName)
-	fmt.Println(connStr)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -87,31 +60,7 @@ func handleGraphQLPlayground() http.HandlerFunc {
 }
 
 func handleGraphQL() http.HandlerFunc {
-	plantType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "Plant",
-		Fields: graphql.Fields{
-			"id": &graphql.Field{
-				Type: graphql.String,
-			},
-			"name": &graphql.Field{
-				Type: graphql.String,
-			},
-		},
-	})
-
-	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query: graphql.NewObject(graphql.ObjectConfig{
-			Name: "RootQuery",
-			Fields: graphql.Fields{
-				"plants": &graphql.Field{
-					Type: graphql.NewList(plantType),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return plants, nil
-					},
-				},
-			},
-		}),
-	})
+	schema := schema.NewSchema()
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var params struct {
