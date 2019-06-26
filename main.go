@@ -2,20 +2,20 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"text/template"
 
-	graphql "github.com/graph-gophers/graphql-go"
-	"github.com/graph-gophers/graphql-go/relay"
+	"github.com/graphql-go/graphql"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	// db := connectToDB()
+	// connectToDB()
 
 	http.Handle("/", handleGraphQLPlayground())
 	http.Handle("/api", handleGraphQL())
@@ -33,6 +33,10 @@ func connectToDB() *sql.DB {
 		pw,
 		dbName,
 	)
+	fmt.Println(user)
+	fmt.Println(pw)
+	fmt.Println(dbName)
+	fmt.Println(connStr)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -52,65 +56,57 @@ func handleGraphQLPlayground() http.HandlerFunc {
 	}
 }
 
-func handleGraphQL() http.Handler {
-	s := `
-		schema {
-			query: Query
+func handleGraphQL() http.HandlerFunc {
+	plantType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "Plant",
+		Fields: graphql.Fields{
+			"id": &graphql.Field{
+				Type: graphql.String,
+			},
+			"name": &graphql.Field{
+				Type: graphql.String,
+			},
+		},
+	})
+
+	schema, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name: "RootQuery",
+			Fields: graphql.Fields{
+				"plants": &graphql.Field{
+					Type: graphql.NewList(plantType),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return plants, nil
+					},
+				},
+			},
+		}),
+	})
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var params struct {
+			Query         string                 `json:"query"`
+			OperationName string                 `json:"operationName"`
+			Variables     map[string]interface{} `json:"variables"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
-		type Query {
-			plants: [Plant!]!
+		response := graphql.Do(graphql.Params{
+			Schema:         schema,
+			RequestString:  params.Query,
+			OperationName:  params.OperationName,
+			VariableValues: params.Variables,
+		})
+		responseJSON, err := json.Marshal(response)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
-		type Plant {
-			id: ID!
-			name: String
-		}
-	`
-	schema := graphql.MustParseSchema(s, &query{})
-	return &relay.Handler{Schema: schema}
-}
-
-type query struct{}
-
-func (*query) Plants() []*plantResolver {
-	return []*plantResolver{
-		&plantResolver{&plant{
-			id:   "001",
-			name: "Fiddle Leaf Fig",
-		}},
-		&plantResolver{&plant{
-			id:   "002",
-			name: "Swiss Cheese Plant",
-		}},
-		&plantResolver{&plant{
-			id:   "003",
-			name: "Macho Fern",
-		}},
-		&plantResolver{&plant{
-			id:   "004",
-			name: "ZZ Plant",
-		}},
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(responseJSON)
 	}
-}
-
-type plant struct {
-	id   graphql.ID
-	name string
-}
-
-type plantResolver struct {
-	p *plant
-}
-
-func (p *plantResolver) ID() graphql.ID {
-	return p.p.id
-}
-
-func (p *plantResolver) Name() *string {
-	name := p.p.name
-	if name == "" {
-		return nil
-	}
-	return &name
 }
